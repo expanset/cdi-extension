@@ -6,7 +6,7 @@
 
 	<parent> 
 		<groupId>com.expanset</groupId>
-		<artifactId>expanset</artifactId>
+		<artifactId>expanset-parent</artifactId>
 		<version>1-SNAPSHOT</version>
 	</parent>
 
@@ -15,8 +15,26 @@
 	
 	<packaging>pom</packaging>
 	
-	<name>CDI extension</name>
-	<description>CDI extension</description>
+	<name>JavaEE CDI extension</name>
+	<description>JavaEE CDI extension classes</description>
+	<url>https://expanset.com</url>	
+	
+	<scm>
+		<url>https://github.com/expanset/cdi-extension</url>
+		<connection>scm:git:https://github.com/expanset/cdi-extension</connection>
+		<developerConnection>scm:git:https://github.com/expanset/cdi-extension</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
+	
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/expanset/cdi-extension/issues</url>
+	</issueManagement>
+	
+	<ciManagement>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/expanset/cdi-extension</url>
+	</ciManagement>	
 	
 	<modules>
 		<module>config</module>

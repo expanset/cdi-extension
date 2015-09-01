@@ -7,7 +7,7 @@
 	<parent> 
 		<groupId>com.expanset</groupId>
 		<artifactId>expanset-cdi-extension</artifactId>
-		<version>1.0.2-SNAPSHOT</version>
+		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -15,10 +15,13 @@
 	
 	<packaging>jar</packaging>
 	
-	<name>Configuration features for CDI</name>
-	<description>Configuration features for CDI</description>
+	<name>JavaEE CDI configuration</name>
+	<description>Configuration features for JavaEE CDI</description>
 			
 	<dependencies>
-	</dependencies>	
-
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+		</dependency>	
+	</dependencies>
 </project>
