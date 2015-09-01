@@ -41,7 +41,12 @@ public class ConfiguredValueTest {
 	@Test
 	public void injectValues() {
 		assertEquals("test", test.testString);
+		assertNull(test.testStringNull);
+		assertEquals("def", test.testStringDefault);
+		
 		assertEquals(Double.valueOf(0.1), test.testDouble);
+		assertNull(test.testDoubleNull);
+		assertEquals(Double.valueOf(1.1), test.testDoubleDefault);
 	}
 
 	public static class TestBean {	
@@ -51,8 +56,24 @@ public class ConfiguredValueTest {
 		public String testString;
 
 		@Inject 
+		@ConfiguredValue(value="testStringNull",required=false)
+		public String testStringNull;
+
+		@Inject 
+		@ConfiguredValue(value="testStringDefault",def="def")
+		public String testStringDefault;
+				
+		@Inject 
 		@ConfiguredValue("testDouble")
 		public Double testDouble;
+
+		@Inject 
+		@ConfiguredValue(value="testDoubleNull",required=false)
+		public Double testDoubleNull;
+		
+		@Inject 
+		@ConfiguredValue(value="testDoubleDefault",def="1.1")
+		public Double testDoubleDefault;
 	}
 	
 	@ApplicationScoped

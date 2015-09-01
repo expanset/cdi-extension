@@ -17,10 +17,11 @@ public class ConfiguredValueProducer {
     public String getStringConfigValue(InjectionPoint ip) {
     	final ConfiguredValue ann = ip.getAnnotated().getAnnotation(ConfiguredValue.class);
     	final String result;
-    	if(ann.required()) {
+    	final String defaultValue = StringUtils.isNotEmpty(ann.def()) ? ann.def() : null;    	
+    	if(ann.required() && defaultValue == null) {
     		result = config.getString(ann.value());
     	} else {
-    		result = config.getString(ann.value(), ann.def());
+    		result = config.getString(ann.value(), defaultValue);
     	}
     	return result;
     }
@@ -30,16 +31,11 @@ public class ConfiguredValueProducer {
     public Double getDoubleConfigValue(InjectionPoint ip) {
     	final ConfiguredValue ann = ip.getAnnotated().getAnnotation(ConfiguredValue.class);
     	final Double result;
-    	if(ann.required()) {
+    	final Double defaultValue = StringUtils.isNotEmpty(ann.def()) ? Double.valueOf(ann.def()) : null;    	
+    	if(ann.required() && defaultValue == null) {
     		result = config.getDouble(ann.value());
     	} else {
-    		final Double def;
-    		if(StringUtils.isNotEmpty(ann.def())) {
-    			def = Double.valueOf(ann.def());
-    		} else {
-    			def = null;
-    		}
-    		result = config.getDouble(ann.value(), def);
+    		result = config.getDouble(ann.value(), defaultValue);
     	}
     	return result;
     }

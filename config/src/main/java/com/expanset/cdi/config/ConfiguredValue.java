@@ -23,5 +23,5 @@ public @interface ConfiguredValue {
     String def() default StringUtils.EMPTY;
     
     @Nonbinding
-    boolean required() default false;
+    boolean required() default true;
 }
