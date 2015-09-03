@@ -38,6 +38,7 @@
 	
 	<modules>
 		<module>config</module>
+		<module>tracing</module>
 	</modules>
 		
 	<dependencies>

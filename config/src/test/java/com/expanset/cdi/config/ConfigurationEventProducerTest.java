@@ -5,13 +5,13 @@ import static org.junit.Assert.*;
 import java.io.Reader;
 import java.io.Writer;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import org.apache.commons.configuration.AbstractFileConfiguration;
+import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.event.ConfigurationEvent;
@@ -30,42 +30,60 @@ public class ConfigurationEventProducerTest {
 	private TestBean test;	
 		
 	@Inject
-	private Configuration config;		
+	private AbstractFileConfiguration config;		
+	
+	@Inject
+	@AnotherConfig
+	private CompositeConfiguration compositeConfig;	
 	
 	@Deployment
     public static JavaArchive createDeployment() {
         return ShrinkWrap.create(JavaArchive.class)
             .addClass(TestBean.class)
             .addClass(ConfigurationProducer.class)
-            .addClass(AbstractConfigurationProducer.class)
+            .addClass(CompositeConfigurationProducer.class)
             .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
     }
 	
 	@Test
 	public void reloadingTest() 
 			throws ConfigurationException {
-		((AbstractFileConfiguration)config).refresh();
+		config.refresh();
 		
-		assertTrue(test.beforeReloading);
-		assertTrue(test.afterReloading);
+		assertTrue(test.isBeforeReloading());
+		assertTrue(test.isAfterReloading());
 	}
 
 	@Test
 	public void changingConfigTest() {
-		((AbstractFileConfiguration)config).setProperty("test", "newValue");
+		AbstractFileConfiguration fileConfiguration = 
+				(AbstractFileConfiguration)compositeConfig.getConfiguration(0);	
+		fileConfiguration.setProperty("test", "newValue");
 		
-		assertTrue(test.configChanged);
+		assertTrue(test.isConfigChanged());
 	}
 		
-	@Singleton
+	@ApplicationScoped
 	public static class TestBean {	
 		
-		boolean beforeReloading = false;
+		private boolean beforeReloading = false;
 		
-		boolean afterReloading = false;
+		private boolean afterReloading = false;
 		
-		boolean configChanged = false;
-		
+		private boolean configChanged = false;
+
+		public boolean isBeforeReloading() {
+			return beforeReloading;
+		}
+
+		public boolean isAfterReloading() {
+			return afterReloading;
+		}
+
+		public boolean isConfigChanged() {
+			return configChanged;
+		}
+
 		public void beforeReloading(@Observes @BeforeReloading ConfigurationEvent event) {
 			assertTrue(event.isBeforeUpdate());
 			assertEquals(AbstractFileConfiguration.EVENT_RELOAD, event.getType());
@@ -85,39 +103,91 @@ public class ConfigurationEventProducerTest {
 		}		
 	}
 	
+	@ApplicationScoped
 	public static class ConfigurationProducer extends AbstractConfigurationProducer {
+
+		private final AbstractFileConfiguration config;
 		
-		@Override
-		@Produces
-		@Singleton
-		public Configuration getConfiguration() {
-			final Configuration config = new AbstractFileConfiguration() {
-
-				@Override
-				public void load(Reader in) 
-						throws ConfigurationException {				
-				}
-
-				@Override
-				public void save(Writer out) 
-						throws ConfigurationException {				
-				}
-				
-				@Override
-				public void load(String fileName)
-						throws ConfigurationException {				
-				}			
-			};
+		public ConfigurationProducer() {
+			config = new FileConfigurationImpl(null);			
 			config.addProperty("test", "value");
 			
 			addListener(config);
-			
+		}
+		
+		@Override
+		@Produces
+		@ApplicationScoped
+		public Configuration getConfiguration() {			
 			return config;
 		} 
 		
+		@Produces
+		@ApplicationScoped
+		public AbstractFileConfiguration getAbstractFileConfiguration() {			
+			return config;
+		} 		
+			
 		@Override
 		public void disposeConfiguration(@Disposes Configuration config) {
 			removeListener(config);
-		} 		
+		} 
 	}	
+	
+	@ApplicationScoped
+	public static class CompositeConfigurationProducer extends AbstractConfigurationProducer {
+		
+		private final CompositeConfiguration config;
+		
+		public CompositeConfigurationProducer() {
+			config = new CompositeConfiguration();
+			
+			AbstractFileConfiguration subConfig = new FileConfigurationImpl(null);
+			subConfig.addProperty("test", "value");
+			config.addConfiguration(subConfig);
+
+			addListener(config);
+		}
+		
+		@Override
+		@Produces
+		@AnotherConfig
+		@ApplicationScoped
+		public Configuration getConfiguration() {			
+			return config;
+		} 
+		
+		@Produces
+		@AnotherConfig
+		@ApplicationScoped
+		public CompositeConfiguration getCompositeConfiguration() {			
+			return config;
+		} 		
+			
+		@Override
+		public void disposeConfiguration(@Disposes @AnotherConfig Configuration config) {
+			removeListener(config);
+		} 
+	}
+	
+	private static class FileConfigurationImpl extends AbstractFileConfiguration {
+		
+		public FileConfigurationImpl(Object obj) {			
+		}
+		
+		@Override
+		public void load(Reader in) 
+				throws ConfigurationException {				
+		}
+
+		@Override
+		public void save(Writer out) 
+				throws ConfigurationException {				
+		}
+		
+		@Override
+		public void load(String fileName)
+				throws ConfigurationException {				
+		}		
+	}
 }

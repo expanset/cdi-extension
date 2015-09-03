@@ -11,17 +11,13 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>expanset-cdi-config</artifactId>
+	<artifactId>expanset-cdi-tracing</artifactId>
 	
 	<packaging>jar</packaging>
 	
-	<name>Configuration</name>
-	<description>Configuration features</description>
+	<name>Tracing</name>
+	<description>Tracing features</description>
 			
 	<dependencies>
-		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
-		</dependency>	
 	</dependencies>
 </project>

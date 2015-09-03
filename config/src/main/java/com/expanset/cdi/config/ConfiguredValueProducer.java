@@ -3,6 +3,7 @@ package com.expanset.cdi.config;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.inject.Inject;
@@ -10,6 +11,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang3.StringUtils;
 
+@Dependent
 public class ConfiguredValueProducer {
 	
 	@Inject

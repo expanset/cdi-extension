@@ -3,12 +3,11 @@ package com.expanset.cdi.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import org.apache.commons.configuration.AbstractFileConfiguration;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
@@ -31,14 +30,13 @@ public abstract class AbstractConfigurationProducer implements ConfigurationList
 	private Event<ConfigurationEvent> configChangedEvent;
 			
 	@Produces
-	@Singleton	
+	@ApplicationScoped	
 	public abstract Configuration getConfiguration();
 	
 	public abstract void disposeConfiguration(@Disposes Configuration config);
 	
 	@Override
 	public void configurationChanged(ConfigurationEvent event) {
-
 		if(event.getType() == AbstractFileConfiguration.EVENT_RELOAD) {
 			if(event.isBeforeUpdate()) {
 				beforeReloadingEvent.fire(event);
@@ -50,9 +48,7 @@ public abstract class AbstractConfigurationProducer implements ConfigurationList
 			configChangedEvent.fire(event);
 		}			
 	}
-	
-	protected Configuration getConfigurationImpl() {return null;}
-	
+		
 	protected void addListener(Configuration config) {
 		for(EventSource eventSource : getEventSources(config)) {
 			eventSource.addConfigurationListener(this);

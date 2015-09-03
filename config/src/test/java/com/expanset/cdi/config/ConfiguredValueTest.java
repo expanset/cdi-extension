@@ -7,12 +7,12 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.MapConfiguration;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -86,6 +86,7 @@ public class ConfiguredValueTest {
 		assertEquals("test", test.testStringInstance.get());
 	}
 
+	@Dependent
 	public static class TestBean {	
 		
 		@Inject 
@@ -213,11 +214,12 @@ public class ConfiguredValueTest {
 		Instance<String> testStringInstance;
 	}
 	
+	@ApplicationScoped
 	public static class ConfigurationProducer extends AbstractConfigurationProducer {
 				
 		@Override
 		@Produces
-		@Singleton
+		@ApplicationScoped
 		public Configuration getConfiguration() {
 			final Map<String, Object> props = new HashMap<>();
 			props.put("testString", "test");
@@ -240,6 +242,6 @@ public class ConfiguredValueTest {
 		@Override
 		public void disposeConfiguration(@Disposes Configuration config) {
 			removeListener(config);
-		} 
+		}
 	}
 }
