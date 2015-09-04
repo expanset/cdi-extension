@@ -5,10 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.enterprise.context.Dependent;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-
+import javax.enterprise.context.ApplicationScoped;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
@@ -22,26 +19,104 @@ import org.slf4j.MDC;
  * %d{HH:mm:ss.SSS} [%thread] %X{opId} %-5level %logger{36} - %msg%n
  * </pre>
  */
-@Dependent
+@ApplicationScoped
 public class TracingService {
 
-	protected final AbstractTracingServiceConfig config;
+	private String mdcKey = "opId";
+
+	private String startPrint = "start {}";
 	
-	protected final static AtomicLong longCorrelationId = new AtomicLong();	
+	private String completedPrint = "completed";
 	
-	protected final static AbstractTracingServiceConfig defaultConfig = new AbstractTracingServiceConfig() {};	
+	private String completedNoMDCPrint = "completed {}";
+	
+	private String measureDurationPrint = "completed, elapsed: {}ms";
+	
+	private String measureDurationNoMDCPrint = "completed {}, elapsed: {}ms";
+	
+	private LogLevel defaultLogLevel = LogLevel.DEBUG;	
+	
+	protected final AtomicLong longCorrelationId = new AtomicLong();	
 	
 	protected final static Logger defaultLog = LoggerFactory.getLogger(TracingService.class);
 	
-	@Inject
-	public TracingService(Instance<AbstractTracingServiceConfig> config) {
-		if(config == null || config.isUnsatisfied()) {
-			this.config = defaultConfig;
-		} else {
-			this.config = config.get();
-		}
-	}	
+	/**
+	 * @return Name of MCD key, default - 'opId'.
+	 */
+	public String getMDCKey() {
+		return mdcKey;
+	}
 
+	public void setMDCKey(String mdcKey) {
+		this.mdcKey = mdcKey;
+	}
+
+	/**
+	 * @return Log record pattern for starting profile scope.
+	 */
+	public String getStartPrint() {
+		return startPrint;
+	}
+
+	public void setStartPrint(String startPrint) {
+		this.startPrint = startPrint;
+	}
+
+	/**
+	 * @return Log record pattern for completing profile scope.
+	 */	
+	public String getCompletedPrint() {
+		return completedPrint;
+	}
+
+	public void setCompletedPrint(String completedPrint) {
+		this.completedPrint = completedPrint;
+	}
+
+	/**
+	 * @return Log record pattern for completing profile scope without using MDC.
+	 */	
+	public String getCompletedNoMDCPrint() {
+		return completedNoMDCPrint;
+	}
+
+	public void setCompletedNoMDCPrint(String completedNoMDCPrint) {
+		this.completedNoMDCPrint = completedNoMDCPrint;
+	}
+
+	/**
+	 * @return Log record pattern for completing measured profile scope.
+	 */			
+	public String getMeasureDurationPrint() {
+		return measureDurationPrint;
+	}
+
+	public void setMeasureDurationPrint(String measureDurationPrint) {
+		this.measureDurationPrint = measureDurationPrint;
+	}	
+	
+	/**
+	 * @return Log record pattern for completing measured profile scope without using MDC.
+	 */		
+	public String getMeasureDurationNoMDCPrint() {
+		return measureDurationNoMDCPrint;
+	}
+
+	public void setMeasureDurationNoMDCPrint(String measureDurationNoMDCPrint) {
+		this.measureDurationNoMDCPrint = measureDurationNoMDCPrint;
+	}
+
+	/**
+	 * @return Default log level for profile operations (default  - DEBUG).
+	 */
+	public LogLevel getDefaultLogLevel() {
+		return defaultLogLevel;
+	}
+
+	public void setDefaultLogLevel(LogLevel defaultLogLevel) {
+		this.defaultLogLevel = defaultLogLevel;
+	}	
+	
 	/**
 	 * Starts new profiling scope (writes 'start' and 'complete' of current scope).
 	 * @param log Log to write profiling output.
@@ -185,7 +260,7 @@ public class TracingService {
 				boolean measureDuration) {
 			this.log = log; 
 			this.name = name;
-			this.logLevel = (logLevel == null || logLevel == LogLevel.DEFAULT) ? config.getDefaultLogLevel() : logLevel;
+			this.logLevel = (logLevel == null || logLevel == LogLevel.DEFAULT) ? getDefaultLogLevel() : logLevel;
 			this.correlationIdType = correlationIdType;
 			this.measureDuration = measureDuration;
 
@@ -201,11 +276,11 @@ public class TracingService {
 			
 			if(correlationId != null) {
 				useMDC = true;
-				prevCorrelationId = MDC.get(config.getMDCKey());
+				prevCorrelationId = MDC.get(getMDCKey());
 				if(StringUtils.isNotEmpty(prevCorrelationId)) {
-					MDC.put(config.getMDCKey(), prevCorrelationId + " > " + correlationId.toString());
+					MDC.put(getMDCKey(), prevCorrelationId + " > " + correlationId.toString());
 				} else {
-					MDC.put(config.getMDCKey(), correlationId.toString());
+					MDC.put(getMDCKey(), correlationId.toString());
 				}
 			} else {
 				useMDC = false;
@@ -217,11 +292,11 @@ public class TracingService {
 			}
 			
 			if(this.logLevel == LogLevel.TRACE) {
-				log.trace(config.getStartPrint(), name);
+				log.trace(getStartPrint(), name);
 			} else if(this.logLevel == LogLevel.DEBUG) {
-				log.debug(config.getStartPrint(), name);
+				log.debug(getStartPrint(), name);
 			}  else if(this.logLevel == LogLevel.INFO) {
-				log.info(config.getStartPrint(), name);
+				log.info(getStartPrint(), name);
 			}
 			
 			if(measureDuration) {
@@ -243,46 +318,46 @@ public class TracingService {
 			if(useMDC) {
 				if(stopWatch != null) {
 					if(logLevel == LogLevel.TRACE) {
-						log.trace(config.getMeasureDurationPrint(), stopWatch.getTime());
+						log.trace(getMeasureDurationPrint(), stopWatch.getTime());
 					} else if(logLevel == LogLevel.DEBUG) {
-						log.debug(config.getMeasureDurationPrint(), stopWatch.getTime());
+						log.debug(getMeasureDurationPrint(), stopWatch.getTime());
 					}  else if(logLevel == LogLevel.INFO) {
-						log.info(config.getMeasureDurationPrint(), stopWatch.getTime());
+						log.info(getMeasureDurationPrint(), stopWatch.getTime());
 					}					
 				} else {
 					if(logLevel == LogLevel.TRACE) {
-						log.trace(config.getCompletedPrint());
+						log.trace(getCompletedPrint());
 					} else if(logLevel == LogLevel.DEBUG) {
-						log.debug(config.getCompletedPrint());
+						log.debug(getCompletedPrint());
 					}  else if(logLevel == LogLevel.INFO) {
-						log.info(config.getCompletedPrint());
+						log.info(getCompletedPrint());
 					}										
 				}
 			} else {
 				if(stopWatch != null) {
 					if(logLevel == LogLevel.TRACE) {
-						log.trace(config.getMeasureDurationNoMDCPrint(), name, stopWatch.getTime());
+						log.trace(getMeasureDurationNoMDCPrint(), name, stopWatch.getTime());
 					} else if(logLevel == LogLevel.DEBUG) {
-						log.debug(config.getMeasureDurationNoMDCPrint(), name, stopWatch.getTime());
+						log.debug(getMeasureDurationNoMDCPrint(), name, stopWatch.getTime());
 					}  else if(logLevel == LogLevel.INFO) {
-						log.info(config.getMeasureDurationNoMDCPrint(), name, stopWatch.getTime());
+						log.info(getMeasureDurationNoMDCPrint(), name, stopWatch.getTime());
 					}					
 				} else {
 					if(logLevel == LogLevel.TRACE) {
-						log.trace(config.getCompletedNoMDCPrint(), name);
+						log.trace(getCompletedNoMDCPrint(), name);
 					} else if(logLevel == LogLevel.DEBUG) {
-						log.debug(config.getCompletedNoMDCPrint(), name);
+						log.debug(getCompletedNoMDCPrint(), name);
 					}  else if(logLevel == LogLevel.INFO) {
-						log.info(config.getCompletedNoMDCPrint(), name);
+						log.info(getCompletedNoMDCPrint(), name);
 					}										
 				}
 			}
 			
 			if(useMDC) {
 				if(StringUtils.isNotEmpty(prevCorrelationId)) {
-					MDC.put(config.getMDCKey(), prevCorrelationId);
+					MDC.put(getMDCKey(), prevCorrelationId);
 				} else {
-					MDC.remove(config.getMDCKey());
+					MDC.remove(getMDCKey());
 				}
 			}
 		}

@@ -39,6 +39,7 @@
 	<modules>
 		<module>config</module>
 		<module>tracing</module>
+		<module>i18n</module>
 	</modules>
 		
 	<dependencies>
@@ -83,6 +84,11 @@
 				<version>1.1.8.Final</version>
 				<scope>import</scope>
 				<type>pom</type>
+			</dependency>
+			<dependency>
+				<groupId>com.expanset.utils</groupId>
+				<artifactId>utils-common</artifactId>
+				<version>1.0.2-SNAPSHOT</version>			
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
