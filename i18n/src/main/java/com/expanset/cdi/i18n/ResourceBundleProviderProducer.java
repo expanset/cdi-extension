@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
+import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -56,6 +57,7 @@ public class ResourceBundleProviderProducer {
 		this.timeToLive = timeToLive;
 	}
 	
+	@Named
 	@Produces
 	@ApplicationScoped
 	public ResourceBundleProvider getResourceBundleProvider() {

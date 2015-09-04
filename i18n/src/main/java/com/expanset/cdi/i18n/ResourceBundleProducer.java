@@ -7,6 +7,7 @@ import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Factory for {@link ResourceBundle}.
@@ -21,6 +22,7 @@ public class ResourceBundleProducer {
 	@Inject	
 	private ResourceBundleProvider resourceBundleProvider;
 
+	@Named
 	@Produces
 	@Dependent
 	public ResourceBundle getResourceBundle() {		

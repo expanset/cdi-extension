@@ -5,6 +5,7 @@ import java.util.Locale;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Helps to inject {@link Locale}.
@@ -16,6 +17,7 @@ public class LocaleProducer {
 	@Inject
 	protected LocaleManager localeManager;
 
+	@Named
 	@Produces
 	@Dependent
 	public Locale getLocale() {

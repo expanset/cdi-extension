@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Qualifier
 @Retention(RUNTIME)
-@Target({ TYPE, METHOD, FIELD, PARAMETER })
+@Target({ METHOD, FIELD, PARAMETER })
 public @interface ConfiguredValue {
 
     @Nonbinding

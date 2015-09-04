@@ -8,6 +8,8 @@ import javax.enterprise.event.Event;
 import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.commons.configuration.AbstractFileConfiguration;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
@@ -29,6 +31,7 @@ public abstract class AbstractConfigurationProducer implements ConfigurationList
 	@ConfigChanged
 	private Event<ConfigurationEvent> configChangedEvent;
 			
+	@Named
 	@Produces
 	@ApplicationScoped	
 	public abstract Configuration getConfiguration();
