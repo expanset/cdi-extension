@@ -1,5 +1,6 @@
 package com.expanset.cdi.i18n;
 
+import java.util.Enumeration;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -25,13 +26,30 @@ public class ResourceBundleProducer {
 	@Named
 	@Produces
 	@Dependent
-	public ResourceBundle getResourceBundle() {		
-		Locale locale = localeProvider.get();		
-		if(locale == null) {
-			locale = Locale.getDefault();
+	public ResourceBundle getResourceBundle() {
+		return new ResourceBundleDelegated();
+	}
+	
+	private class ResourceBundleDelegated extends ResourceBundle {
+			
+		@Override
+		public Enumeration<String> getKeys() {
+			return getResourceBundle().getKeys();
 		}
 		
-		final ResourceBundle bundle = resourceBundleProvider.get(locale);
-		return bundle;
-	}
+		@Override
+		protected Object handleGetObject(String key) {
+			return getResourceBundle().getObject(key);
+		}
+		
+		private ResourceBundle getResourceBundle() {
+			Locale locale = localeProvider.get();		
+			if(locale == null) {
+				locale = Locale.getDefault();
+			}
+			
+			final ResourceBundle bundle = resourceBundleProvider.get(locale);
+			return bundle;			
+		}
+	}	
 }
