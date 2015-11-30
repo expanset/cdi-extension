@@ -1,8 +1,6 @@
 package com.expanset.cdi.jta;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.InvalidTransactionException;
@@ -16,16 +14,12 @@ import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 
 import com.expanset.cdi.jta.spi.ResourceTransaction;
-import com.expanset.cdi.jta.spi.ResourceTransactionService;
 
 /**
  * Implementation of {@link TransactionManager} for local transactions.
  */
 @ApplicationScoped
 public class LocalTransactionManager implements TransactionManager, UserTransaction {
-	
-	@Inject
-	protected Instance<ResourceTransactionService> resourceTransactionService;
 	
 	protected ThreadLocal<LocalTransaction> currentTransactionHolder = new ThreadLocal<LocalTransaction>();
 
@@ -35,11 +29,7 @@ public class LocalTransactionManager implements TransactionManager, UserTransact
 		if(currentTransactionHolder.get() != null) {
 			return;
 		}	
-		
-		final ResourceTransaction resourceTransaction = 
-				resourceTransactionService.get().begin();
-		
-		currentTransactionHolder.set(new LocalTransaction(resourceTransaction));
+		currentTransactionHolder.set(new LocalTransaction());
 	}
 
 	@Override
@@ -84,7 +74,7 @@ public class LocalTransactionManager implements TransactionManager, UserTransact
 			throw new InvalidTransactionException();
 		}
 		final LocalTransaction localTransaction = (LocalTransaction)tobj;
-		localTransaction.getResourceTransaction().resume();
+		localTransaction.resume();
 		currentTransactionHolder.set(localTransaction);
 	}
 
@@ -124,7 +114,8 @@ public class LocalTransactionManager implements TransactionManager, UserTransact
 			throws SystemException {
 		final LocalTransaction transaction = currentTransactionHolder.get();
 		if(transaction != null) {
-			transaction.getResourceTransaction().suspend();
+			transaction.suspend();
+			currentTransactionHolder.set(null);
 			return transaction;
 		}		
 		return null;
@@ -142,6 +133,8 @@ public class LocalTransactionManager implements TransactionManager, UserTransact
 		final LocalTransaction transaction = currentTransactionHolder.get();
 		if(transaction != null) {
 			transaction.putResource(key, value);
+		} else {
+			throw new RuntimeException("No active transaction");
 		}
 	}
 
@@ -170,5 +163,14 @@ public class LocalTransactionManager implements TransactionManager, UserTransact
 			return transaction.getRollbackOnly();
 		}
 		return false;
+	}
+
+	public void registerResourceTransaction(ResourceTransaction resourceTransaction) {
+		final LocalTransaction transaction = currentTransactionHolder.get();
+		if(transaction == null) {
+			throw new RuntimeException("Active transaction is not exists");
+		}	
+		
+		transaction.registerResourceTransaction(resourceTransaction);		
 	}
 }

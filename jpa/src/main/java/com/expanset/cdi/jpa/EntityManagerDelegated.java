@@ -20,6 +20,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.metamodel.Metamodel;
 
+/**
+ * Implementation if {@link EntityManager}, that delegates all methods to current {@link EntityManager}. 
+ */
 public class EntityManagerDelegated implements EntityManager {
 	
 	private final EntityManagerProvider entityManagerProvider;
@@ -40,7 +43,6 @@ public class EntityManagerDelegated implements EntityManager {
 		this.synchronization = synchronization;
 		this.properties = properties;
 	}	
-	
 
 	@Override
 	public void persist(Object entity) {
@@ -267,7 +269,7 @@ public class EntityManagerDelegated implements EntityManager {
 	@Override
 	public void joinTransaction() {
 		final EntityManager em = entityManagerProvider.get(unitName,  synchronization,  properties);
-		em.joinTransaction();
+		entityManagerProvider.joinTransaction(em);
 	}
 
 	@Override

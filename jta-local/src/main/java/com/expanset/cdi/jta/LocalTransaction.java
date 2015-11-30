@@ -16,13 +16,14 @@ import javax.transaction.Transaction;
 import javax.transaction.xa.XAResource;
 
 import com.expanset.cdi.jta.spi.ResourceTransaction;
+import com.expanset.common.errors.MultiErrorException;
 
 /**
  * Implementation of {@link Transaction} for local transactions.
  */
 public class LocalTransaction implements Transaction {
 		
-	protected final ResourceTransaction resourceTransaction;
+	protected final List<ResourceTransaction> resourceTransactions = new ArrayList<>();
 	
 	protected final UUID transactionKey = UUID.randomUUID();
 	
@@ -31,15 +32,7 @@ public class LocalTransaction implements Transaction {
 	protected final List<Synchronization> listeners = new ArrayList<>();
 	
 	private int status = Status.STATUS_ACTIVE;
-	
-	public LocalTransaction(ResourceTransaction resourceTransaction) {
-		this.resourceTransaction = resourceTransaction;
-	}
-	
-	public ResourceTransaction getResourceTransaction() {
-		return resourceTransaction;
-	}
-	
+		
 	@Override
 	public void commit() 
 			throws 
@@ -56,15 +49,34 @@ public class LocalTransaction implements Transaction {
 		} else {
 			for(Synchronization sync : listeners) {
 				sync.beforeCompletion();
-			}
-			
+			}			
 			status = Status.STATUS_COMMITTING;
-			try {				
-				resourceTransaction.commit();
+			try {
+				for(ResourceTransaction resourceTransaction : resourceTransactions) {
+					MultiErrorException multiError = null; 
+					try {
+						resourceTransaction.commit();
+					} catch (Exception e) {
+						if(multiError == null) {
+							multiError = new MultiErrorException();
+						}
+						multiError.addError(e);
+					}
+					if(multiError != null) {
+						if(multiError.getErrors().size() > 1) {
+							throw multiError;
+						} else {
+							throw multiError.getErrors().get(0);
+						}
+					}
+				}					
 				status = Status.STATUS_COMMITTED;
-			} catch (Throwable e) {
+			} catch (IllegalStateException | SystemException e) {
 				status = Status.STATUS_UNKNOWN;
 				throw e;
+			} catch (Exception e) {
+				status = Status.STATUS_UNKNOWN;
+				throw new IllegalStateException(e);
 			} finally {
 				for(Synchronization sync : listeners) {
 					sync.afterCompletion(status);
@@ -105,17 +117,36 @@ public class LocalTransaction implements Transaction {
 		} else {
 			status = Status.STATUS_ROLLING_BACK;
 			try {
-				resourceTransaction.rollback();
+				for(ResourceTransaction resourceTransaction : resourceTransactions) {
+					MultiErrorException multiError = null; 
+					try {
+						resourceTransaction.rollback();
+					} catch (Exception e) {
+						if(multiError == null) {
+							multiError = new MultiErrorException();
+						}
+						multiError.addError(e);
+					}
+					if(multiError != null) {
+						if(multiError.getErrors().size() > 1) {
+							throw multiError;
+						} else {
+							throw multiError.getErrors().get(0);
+						}
+					}
+				}					
 				status = Status.STATUS_ROLLEDBACK;
-			} catch (Throwable e) {
+			} catch (IllegalStateException | SystemException e) {
 				status = Status.STATUS_UNKNOWN;
 				throw e;
+			} catch (Exception e) {
+				status = Status.STATUS_UNKNOWN;
+				throw new IllegalStateException(e);
 			} finally {
 				for(Synchronization sync : listeners) {
 					sync.afterCompletion(status);
 				}								
 			}
-
 		}			
 	}
 
@@ -130,7 +161,9 @@ public class LocalTransaction implements Transaction {
 	}
 
 	public void setTransactionTimeout(int seconds) {
-		resourceTransaction.setTimeout(seconds);
+		for(ResourceTransaction resourceTransaction : resourceTransactions) {
+			resourceTransaction.setTimeout(seconds);
+		}		
 	}
 
 	public Object getTransactionKey() {
@@ -143,5 +176,21 @@ public class LocalTransaction implements Transaction {
 
 	public Object getResource(Object key) {
 		return properties.get(key);
+	}
+
+	public void suspend() {
+		for(ResourceTransaction resourceTransaction : resourceTransactions) {
+			resourceTransaction.suspend();
+		}		
+	}
+
+	public void resume() {
+		for(ResourceTransaction resourceTransaction : resourceTransactions) {
+			resourceTransaction.resume();
+		}		
+	}
+	
+	public void registerResourceTransaction(ResourceTransaction resourceTransaction) {
+		resourceTransactions.add(resourceTransaction);
 	}
 }

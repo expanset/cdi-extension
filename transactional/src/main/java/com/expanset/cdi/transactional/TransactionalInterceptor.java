@@ -1,4 +1,4 @@
-package com.expanset.cdi.jta;
+package com.expanset.cdi.transactional;
 
 import java.lang.reflect.Method;
 

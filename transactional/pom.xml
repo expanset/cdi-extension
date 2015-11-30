@@ -11,12 +11,12 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>expanset-cdi-jpa</artifactId>
+	<artifactId>expanset-cdi-transactional</artifactId>
 	
 	<packaging>jar</packaging>
 	
-	<name>JPA integration</name>
-	<description>JPA integration</description>
+	<name>JTA Transactional interceptor</name>
+	<description>JTA Transactional interceptor</description>
 			
 	<dependencies>
 		<dependency>
@@ -25,15 +25,8 @@
 		</dependency>
 		
 		<dependency>
-			<groupId>com.expanset</groupId>
-			<artifactId>expanset-cdi-jta-local</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.eclipse.persistence</groupId>
-			<artifactId>javax.persistence</artifactId>
-		</dependency>			
+			<groupId>javax.transaction</groupId>
+			<artifactId>javax.transaction-api</artifactId>
+		</dependency>					
 	</dependencies>
 </project>
